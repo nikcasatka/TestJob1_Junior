@@ -1,0 +1,77 @@
+﻿<Window x:Class="TestJob1_Junior.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TestJob1_Junior" 
+        xmlns:tv="clr-namespace:TestJob1_Junior.TreeView.TreeViewModel" 
+        xmlns:Controls="clr-namespace:System.Windows.Controls;assembly=MultiSelectTreeView"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="720" Width="1280">
+    <Window.Resources>
+
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="411*"/>
+            <ColumnDefinition Width="869*"/>
+        </Grid.ColumnDefinitions>
+        <TextBox x:Name="opentFileRootTextBox" Margin="14,10,13,0" TextWrapping="Wrap" Text="Здесь будет указан путь к файлу КПТ" VerticalAlignment="Top" IsEnabled="False" Height="18"/>
+        <Button x:Name="openFileButton" Content="Выбрать файл КПТ" Margin="14,10,0,0" Click="openFileButton_Click" Grid.Column="1" Height="18" VerticalAlignment="Top" HorizontalAlignment="Left" Width="123"/>
+
+        <Controls:MultiSelectTreeView x:Name="treeView" Margin="14,33,13,10" SelectionChanged="treeView_SelectionChanged">
+
+
+
+            <Controls:MultiSelectTreeView.ItemContainerStyle>
+
+                <Style TargetType="{x:Type Controls:MultiSelectTreeViewItem}">
+                    <!--
+						Here the TreeViewItem's properties are connected with the ViewModel class.
+						Basically you would make all MultiSelectTreeViewItem properties accessible
+						in the view model class that you possibly want to get or set in order to
+						determine or manipulate the view from the view model class.
+						-->
+                    <Setter Property="DisplayName" Value="{Binding DisplayName, Mode=TwoWay}"/>
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                    <Setter Property="IsEnabled" Value="{Binding IsEnabled, Mode=TwoWay}"/>
+                    <Setter Property="IsVisible" Value="{Binding IsVisible, Mode=TwoWay}"/>
+                    <Setter Property="IsEditable" Value="{Binding IsEditable, Mode=TwoWay}"/>
+                    <Setter Property="IsEditing" Value="{Binding IsEditing, Mode=TwoWay}"/>
+                    <Setter Property="Remarks" Value="{Binding Remarks, Mode=TwoWay}"/>
+                    <!--
+						The ContentTemplateEdit property defines a DataTemplate that is applied
+						instead of the normal viewing DataTemplate (definition below) when the item
+						is in edit mode. If you do not need editing functionality or the default
+						template is good for you, then you can omit this Setter.
+						-->
+
+                </Style>
+            </Controls:MultiSelectTreeView.ItemContainerStyle>
+
+            <Controls:MultiSelectTreeView.Resources>
+                <!--
+					Here the general item appearance is defined, for the ViewModel.TreeItemViewModel type
+					-->
+                <HierarchicalDataTemplate DataType="{x:Type tv:TreeItemViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <!--<Border Background="YellowGreen" CornerRadius="3" Width="16" Height="16" SnapsToDevicePixels="True"/>-->
+                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" Padding="4,0,2,0"/>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+            </Controls:MultiSelectTreeView.Resources>
+
+        </Controls:MultiSelectTreeView>
+
+        <Button x:Name="serializeFocusedObjectsButton" Content="Сериализовать" HorizontalAlignment="Left" Margin="142,10,0,0" Width="123" Click="serializeFocusedObjectsButton_Click" Grid.Column="1" Height="18" VerticalAlignment="Top"/>
+        <RichTextBox x:Name="richTextBoxObjectsContent" Margin="14,33,10,10" Grid.Column="1">
+            <FlowDocument>
+                <Paragraph>
+                    <Run Text=""/>
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+    </Grid>
+</Window>
