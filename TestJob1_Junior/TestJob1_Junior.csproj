@@ -58,8 +58,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Serialize\Models\allModelsOfKPT.cs" />
-    <Compile Include="Serialize\Models\Output\AllInOneDTO.cs" />
+    <Compile Include="Serialize\Models\AllModelsOfKPT.cs" />
+    <Compile Include="Serialize\Models\Output\KptDTO.cs" />
     <Compile Include="Serialize\Models\Output\BoundsDTO.cs" />
     <Compile Include="Serialize\Models\Output\BuildingsDTO.cs" />
     <Compile Include="Serialize\Models\Output\ConstructionsDTO.cs" />
@@ -114,8 +114,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Tools\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

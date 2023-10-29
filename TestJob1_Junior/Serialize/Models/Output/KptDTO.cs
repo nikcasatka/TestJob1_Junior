@@ -2,7 +2,7 @@
 {
     [System.SerializableAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute("TestJob1", Namespace = "")]
-    public class AllInOneDTO
+    public class KptDTO
     {
         [System.Xml.Serialization.XmlElementAttribute("land_records")]
         public ParcelsDTO parcels { get; set; }
@@ -28,9 +28,9 @@
         public ZonesDTO zones { get; set; }
 
 
-        public AllInOneDTO() { }
+        public KptDTO() { }
 
-        public AllInOneDTO(ParcelsDTO parcels, BuildingsDTO buildings, ConstructionsDTO constructions, SpatialDataDTO spatialData, BoundsDTO bounds, ZonesDTO zones)
+        public KptDTO(ParcelsDTO parcels, BuildingsDTO buildings, ConstructionsDTO constructions, SpatialDataDTO spatialData, BoundsDTO bounds, ZonesDTO zones)
         {
             this.parcels = parcels;
             this.buildings = buildings;

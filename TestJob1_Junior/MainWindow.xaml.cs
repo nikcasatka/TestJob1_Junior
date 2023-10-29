@@ -21,27 +21,36 @@ namespace TestJob1_Junior
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
-    {
-        public MainWindow()
-        {
-            MultiSelectTreeView treeView = new MultiSelectTreeView();
-
-            InitializeComponent();
-        }
-
+    {      
         // Создаем переменную для хранения десериализованной КПТ.
-        ExtractCadastralPlanTerritory kpt;
+        private ExtractCadastralPlanTerritory _kpt;
 
         // Создаем списки объектов.
-        List<BaseDataTypeLandRecordsLandRecord> parcels;
-        List<BaseDataTypeBuildRecordsBuildRecord> buildings;
-        List<BaseDataTypeConstructionRecordsConstructionRecord> constructions;
-        EntitySpatialBound spatialData;
-        List<MunicipalBoundariesTypeMunicipalBoundaryRecord> bounds;
-        List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord> zones;
+        private List<BaseDataTypeLandRecordsLandRecord> _parcels;
+        private List<BaseDataTypeBuildRecordsBuildRecord> _buildings;
+        private List<BaseDataTypeConstructionRecordsConstructionRecord> _constructions;
+        private EntitySpatialBound _spatialData;
+        private List<MunicipalBoundariesTypeMunicipalBoundaryRecord> _bounds;
+        private List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord> _zones;
 
         // Создаем переменную для объединения всех перечней объектов из десериализованной КПТ для кастомной сериализации.
-        AllInOneDTO allInOneDTO;
+        private KptDTO _kptDTO;
+
+        // Создаем списки для выбранных объектов.
+        private List<BaseDataTypeLandRecordsLandRecord> _selectedParcels;
+        private List<BaseDataTypeBuildRecordsBuildRecord> _selectedBuildings;
+        private List<BaseDataTypeConstructionRecordsConstructionRecord> _selectedConstructions;
+        private EntitySpatialBound _selectedSpatialData;
+        private List<MunicipalBoundariesTypeMunicipalBoundaryRecord> _selectedBounds;
+        private List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord> _selectedZones;
+
+        // Создаем переменную для объединения всех перечней выбранных объектов.
+        private KptDTO _allSelectedObject;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
 
         /// <summary>
         /// Обработчик кнопки выбора файла КПТ на локальном ПК.
@@ -74,52 +83,55 @@ namespace TestJob1_Junior
                         try
                         {
                             XmlSerializer xmlSerializerKPT = new XmlSerializer(typeof(ExtractCadastralPlanTerritory));
-                            kpt = xmlSerializerKPT.Deserialize(fs) as ExtractCadastralPlanTerritory;
+                            _kpt = xmlSerializerKPT.Deserialize(fs) as ExtractCadastralPlanTerritory;
                         }
                         catch (InvalidOperationException ex)
                         {
                             MessageBox.Show($"Выбранный XML-файл не соответствует XSD-схеме кадастрового плана территории (extract_cadastral_plan_territory).\nEx: {ex.Message}");
                         }
-                        // Добавит катч на занятый файл
+                        catch (IOException ex)
+                        {
+                            MessageBox.Show($"Файл занят или не может быть прочитан: {ex.Message}");
+                        }
                         catch (Exception ex)
                         {
                             MessageBox.Show($"необработанное исключение: {ex.Message}");
                         }
 
                         // Инициализируем или очищаем списки объектов.
-                        parcels = new List<BaseDataTypeLandRecordsLandRecord>();
-                        buildings = new List<BaseDataTypeBuildRecordsBuildRecord>();
-                        constructions = new List<BaseDataTypeConstructionRecordsConstructionRecord>();
-                        bounds = new List<MunicipalBoundariesTypeMunicipalBoundaryRecord>();
-                        zones = new List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord>();
+                        _parcels = new List<BaseDataTypeLandRecordsLandRecord>();
+                        _buildings = new List<BaseDataTypeBuildRecordsBuildRecord>();
+                        _constructions = new List<BaseDataTypeConstructionRecordsConstructionRecord>();
+                        _bounds = new List<MunicipalBoundariesTypeMunicipalBoundaryRecord>();
+                        _zones = new List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord>();
 
                         // Заполненяем списки объектов.
-                        foreach (CadastralBlock cb in kpt.CadastralBlocks)
+                        foreach (CadastralBlock cb in _kpt.CadastralBlocks)
                         {
-                            parcels.AddRange(cb.RecordData.BaseData.LandRecords);
-                            buildings.AddRange(cb.RecordData.BaseData.BuildRecords);
-                            constructions.AddRange(cb.RecordData.BaseData.ConstructionRecords);
-                            spatialData = cb.SpatialData.EntitySpatial;
-                            bounds.AddRange(cb.MunicipalBoundaries);
-                            zones.AddRange(cb.ZonesAndTerritoriesBoundaries);
+                            _parcels.AddRange(cb.RecordData.BaseData.LandRecords);
+                            _buildings.AddRange(cb.RecordData.BaseData.BuildRecords);
+                            _constructions.AddRange(cb.RecordData.BaseData.ConstructionRecords);
+                            _spatialData = cb.SpatialData.EntitySpatial;
+                            _bounds.AddRange(cb.MunicipalBoundaries);
+                            _zones.AddRange(cb.ZonesAndTerritoriesBoundaries);
                         }
 
                         // Сливаем списки объектов в объединяющий класс для последующей кастомной сериализации.
-                        allInOneDTO = new AllInOneDTO(
-                        new ParcelsDTO(parcels),
-                        new BuildingsDTO(buildings),
-                        new ConstructionsDTO(constructions),
-                        new SpatialDataDTO(spatialData),
-                        new BoundsDTO(bounds),
-                        new ZonesDTO(zones)
+                        _kptDTO = new KptDTO(
+                        new ParcelsDTO(_parcels),
+                        new BuildingsDTO(_buildings),
+                        new ConstructionsDTO(_constructions),
+                        new SpatialDataDTO(_spatialData),
+                        new BoundsDTO(_bounds),
+                        new ZonesDTO(_zones)
                         );
 
                         // Отрисовываем древо объектов по сформированным спискам объектов.
-                        ParcelBuildTreeView parcelBuildTreeView = new ParcelBuildTreeView(treeView, allInOneDTO.parcels);
-                        ObjectRealtyBuildTreeView objectRealtyBuildTreeView = new ObjectRealtyBuildTreeView(treeView, allInOneDTO.buildings, allInOneDTO.constructions);
-                        SpatialDataBuildTreeView spatialDataBuildTreeView = new SpatialDataBuildTreeView(treeView, allInOneDTO.spatialData);
-                        BoundsBuildTreeView boundsBuildTreeView = new BoundsBuildTreeView(treeView, allInOneDTO.bounds);
-                        ZonesBuildTreeView zonesBuildTreeView = new ZonesBuildTreeView(treeView, allInOneDTO.zones);
+                        ParcelBuildTreeView parcelBuildTreeView = new ParcelBuildTreeView(treeView, _kptDTO.parcels);
+                        ObjectRealtyBuildTreeView objectRealtyBuildTreeView = new ObjectRealtyBuildTreeView(treeView, _kptDTO.buildings, _kptDTO.constructions);
+                        SpatialDataBuildTreeView spatialDataBuildTreeView = new SpatialDataBuildTreeView(treeView, _kptDTO.spatialData);
+                        BoundsBuildTreeView boundsBuildTreeView = new BoundsBuildTreeView(treeView, _kptDTO.bounds);
+                        ZonesBuildTreeView zonesBuildTreeView = new ZonesBuildTreeView(treeView, _kptDTO.zones);
                     }
                 }
             }
@@ -149,34 +161,24 @@ namespace TestJob1_Junior
                 //Сериализуем
                 using (FileStream fs = new FileStream(saveFileDialog.FileName, FileMode.OpenOrCreate))
                 {
-                    XmlSerializer xmlSerializerDTO = new XmlSerializer(typeof(AllInOneDTO));
+                    XmlSerializer xmlSerializerDTO = new XmlSerializer(typeof(KptDTO));
 
-                    xmlSerializerDTO.Serialize(fs, allSelectedObject);
+                    xmlSerializerDTO.Serialize(fs, _allSelectedObject);
 
                     MessageBox.Show("Сериализация выполнена успешно.");
                 }
             }
         }
 
-        // Создаем списки объектов.
-        List<BaseDataTypeLandRecordsLandRecord> selectedParcels;
-        List<BaseDataTypeBuildRecordsBuildRecord> selectedBuildings;
-        List<BaseDataTypeConstructionRecordsConstructionRecord> selectedConstructions;
-        EntitySpatialBound selectedSpatialData;
-        List<MunicipalBoundariesTypeMunicipalBoundaryRecord> selectedBounds;
-        List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord> selectedZones;
-
-        AllInOneDTO allSelectedObject;
-
         private void treeView_SelectionChanged(object sender, EventArgs e)
         {
             // Инициализируем или очищаем списки объектов.
-            selectedParcels = new List<BaseDataTypeLandRecordsLandRecord>();
-            selectedBuildings = new List<BaseDataTypeBuildRecordsBuildRecord>();
-            selectedConstructions = new List<BaseDataTypeConstructionRecordsConstructionRecord>();
-            selectedSpatialData = new EntitySpatialBound();
-            selectedBounds = new List<MunicipalBoundariesTypeMunicipalBoundaryRecord>();
-            selectedZones = new List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord>();
+            _selectedParcels = new List<BaseDataTypeLandRecordsLandRecord>();
+            _selectedBuildings = new List<BaseDataTypeBuildRecordsBuildRecord>();
+            _selectedConstructions = new List<BaseDataTypeConstructionRecordsConstructionRecord>();
+            _selectedSpatialData = new EntitySpatialBound();
+            _selectedBounds = new List<MunicipalBoundariesTypeMunicipalBoundaryRecord>();
+            _selectedZones = new List<ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord>();
 
             foreach (TreeItemViewModel selected in treeView.SelectedItems)
             {
@@ -184,61 +186,47 @@ namespace TestJob1_Junior
                 {
                     if (selectedItem.Parent is TreeItemViewModel selectedParent)
                     {
-                        //XmlSerializer serializer;
-
                         switch (selectedParent.DisplayName)
                         {
                             case "Parcel":
                                 {
-                                    BaseDataTypeLandRecordsLandRecord parcel = allInOneDTO.parcels.parcels.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).FirstOrDefault();
-                                    selectedParcels.Add(parcel);
-                                    //serializer = new XmlSerializer(typeof(BaseDataTypeLandRecordsLandRecord));
-                                    //serializer.Serialize(writer, parcel);
+                                    BaseDataTypeLandRecordsLandRecord parcel = _kptDTO.parcels.parcels.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).FirstOrDefault();
+                                    _selectedParcels.Add(parcel);
                                     break;
                                 }
 
                             case "ObjectRealty":
                                 {
-                                    if (allInOneDTO.buildings.buildings.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).Any())
+                                    if (_kptDTO.buildings.buildings.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).Any())
                                     {
-                                        BaseDataTypeBuildRecordsBuildRecord building = allInOneDTO.buildings.buildings.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).FirstOrDefault();
-                                        selectedBuildings.Add(building);
-                                        //serializer = new XmlSerializer(typeof(BaseDataTypeBuildRecordsBuildRecord));
-                                        //serializer.Serialize(writer, building);
+                                        BaseDataTypeBuildRecordsBuildRecord building = _kptDTO.buildings.buildings.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).FirstOrDefault();
+                                        _selectedBuildings.Add(building);
                                     }
                                     else
                                     {
-                                        BaseDataTypeConstructionRecordsConstructionRecord construction = allInOneDTO.constructions.constructions.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).FirstOrDefault();
-                                        selectedConstructions.Add(construction);
-                                        //serializer = new XmlSerializer(typeof(BaseDataTypeConstructionRecordsConstructionRecord));
-                                        //serializer.Serialize(writer, construction);
+                                        BaseDataTypeConstructionRecordsConstructionRecord construction = _kptDTO.constructions.constructions.Where(x => x.Object.CommonData.CadNumber == selectedItem.DisplayName.ToString()).FirstOrDefault();
+                                        _selectedConstructions.Add(construction);
                                     }
                                     break;
                                 }
 
                             case "SpatialData":
                                 {
-                                    selectedSpatialData = allInOneDTO.spatialData.spatialData;
-                                    //serializer = new XmlSerializer(typeof(EntitySpatialBound));
-                                    //serializer.Serialize(writer, spatial);
+                                    _selectedSpatialData = _kptDTO.spatialData.spatialData;
                                     break;
                                 }
 
                             case "Bound":
                                 {
-                                    MunicipalBoundariesTypeMunicipalBoundaryRecord bound = allInOneDTO.bounds.bounds.Where(x => x.BObjectMunicipalBoundary.BObject.RegNumbBorder == selectedItem.DisplayName.ToString()).FirstOrDefault();
-                                    selectedBounds.Add(bound);
-                                    //serializer = new XmlSerializer(typeof(MunicipalBoundariesTypeMunicipalBoundaryRecord));
-                                    //serializer.Serialize(writer, bound);
+                                    MunicipalBoundariesTypeMunicipalBoundaryRecord bound = _kptDTO.bounds.bounds.Where(x => x.BObjectMunicipalBoundary.BObject.RegNumbBorder == selectedItem.DisplayName.ToString()).FirstOrDefault();
+                                    _selectedBounds.Add(bound);
                                     break;
                                 }
 
                             case "Zone":
                                 {
-                                    ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord zone = allInOneDTO.zones.zones.Where(x => x.BObjectZonesAndTerritories.BObject.RegNumbBorder == selectedItem.DisplayName.ToString()).FirstOrDefault();
-                                    selectedZones.Add(zone);
-                                    //serializer = new XmlSerializer(typeof(ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord));
-                                    //serializer.Serialize(writer, zone);
+                                    ZonesAndTerritoriesBoundariesTypeZonesAndTerritoriesRecord zone = _kptDTO.zones.zones.Where(x => x.BObjectZonesAndTerritories.BObject.RegNumbBorder == selectedItem.DisplayName.ToString()).FirstOrDefault();
+                                    _selectedZones.Add(zone);
                                     break;
                                 }
                         }
@@ -246,20 +234,20 @@ namespace TestJob1_Junior
                 }
             }
 
-            allSelectedObject = new AllInOneDTO(
-                new ParcelsDTO(selectedParcels),
-                new BuildingsDTO(selectedBuildings),
-                new ConstructionsDTO(selectedConstructions),
-                new SpatialDataDTO(selectedSpatialData),
-                new BoundsDTO(selectedBounds),
-                new ZonesDTO(selectedZones));
+            _allSelectedObject = new KptDTO(
+                new ParcelsDTO(_selectedParcels),
+                new BuildingsDTO(_selectedBuildings),
+                new ConstructionsDTO(_selectedConstructions),
+                new SpatialDataDTO(_selectedSpatialData),
+                new BoundsDTO(_selectedBounds),
+                new ZonesDTO(_selectedZones));
 
             richTextBoxObjectsContent.Document.Blocks.Clear();
 
             using (StringWriter writer = new StringWriter())
             {
-                XmlSerializer xmlSerializerDTO = new XmlSerializer(typeof(AllInOneDTO));
-                xmlSerializerDTO.Serialize(writer, allSelectedObject);
+                XmlSerializer xmlSerializerDTO = new XmlSerializer(typeof(KptDTO));
+                xmlSerializerDTO.Serialize(writer, _allSelectedObject);
                 richTextBoxObjectsContent.Document.Blocks.Add(new Paragraph(new Run(writer.ToString())));
             }
         }
